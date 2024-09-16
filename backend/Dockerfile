@@ -7,8 +7,9 @@ WORKDIR /app
 # Копирование package.json и package-lock.json
 COPY package*.json ./
 
-# Установка зависимостей
+# Установка зависимостей, включая Nest CLI
 RUN npm install --production
+RUN npm install @nestjs/cli
 
 # Копирование всех файлов проекта
 COPY . .
