@@ -11,7 +11,7 @@ export const createNote = async (title: string, content: string) => {
 };
 
 export const updateNote = async (id: string, title: string, content: string) => {
-	const response = await instance.put(`/notes/${id}`, { title, content });
+	const response = await instance.patch(`/notes/${id}`, { title, content });
 	return response.data;
 };
 

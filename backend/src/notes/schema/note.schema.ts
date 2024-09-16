@@ -11,6 +11,9 @@ export class Note extends Document {
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   user: Types.ObjectId;
+
+  @Prop({ default: Date.now })
+  createdDate: Date;
 }
 
 export const NoteSchema = SchemaFactory.createForClass(Note);

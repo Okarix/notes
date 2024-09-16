@@ -8,7 +8,6 @@ export const login = async (username: string, password: string) => {
 
 export const register = async (username: string, password: string) => {
 	const response = await instance.post('/auth/register', { username, password });
-	// localStorage.setItem('token', response.data.access_token);
 	return response.data;
 };
 

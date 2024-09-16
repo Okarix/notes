@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,32 +6,81 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { getNotes, createNote, updateNote, deleteNote } from '@/services/notesService';
+import { logout } from '@/services/authService';
+import { useNavigate } from 'react-router-dom';
 
-// Placeholder data for existing notes
-const initialNotes = [
-	{ id: 1, title: 'Meeting Notes', content: 'Discuss project timeline and deliverables.', date: '2023-05-15' },
-	{ id: 2, title: 'Ideas for New Feature', content: 'Brainstorming session outcomes.', date: '2023-05-14' },
-	{ id: 3, title: 'Book Recommendations', content: 'List of books to read this summer.', date: '2023-05-13' },
-];
+export interface Note {
+	_id: string;
+	title: string;
+	content: string;
+	user: string;
+	createdDate: string;
+}
 
 export default function MainPage() {
-	const [notes, setNotes] = useState(initialNotes);
+	const [notes, setNotes] = useState<Note[]>([]);
 	const [newNote, setNewNote] = useState({ title: '', content: '' });
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
+	const [editMode, setEditMode] = useState(false);
+	const [noteToEdit, setNoteToEdit] = useState<null | string>(null);
 
-	const handleCreateNote = () => {
+	const navigate = useNavigate();
+
+	useEffect(() => {
+		fetchNotes();
+	}, []);
+
+	const fetchNotes = async () => {
+		try {
+			const fetchedNotes = await getNotes();
+			setNotes(fetchedNotes);
+			console.log(fetchedNotes);
+		} catch (error) {
+			console.error('Failed to fetch notes:', error);
+		}
+	};
+
+	const handleCreateNote = async () => {
 		if (newNote.title && newNote.content) {
-			const date = new Date().toISOString().split('T')[0];
-			setNotes([...notes, { id: notes.length + 1, ...newNote, date }]);
-			setNewNote({ title: '', content: '' });
-			setIsDialogOpen(false);
+			try {
+				if (editMode && noteToEdit !== null) {
+					await updateNote(noteToEdit, newNote.title, newNote.content);
+				} else {
+					await createNote(newNote.title, newNote.content);
+				}
+				fetchNotes();
+				setNewNote({ title: '', content: '' });
+				setIsDialogOpen(false);
+			} catch (error) {
+				console.error('Failed to create/update note:', error);
+			}
+		}
+	};
+
+	const handleEditNote = (id: string) => {
+		const note = notes.find(note => note._id === id);
+		if (note) {
+			setNewNote({ title: note.title, content: note.content });
+			setNoteToEdit(id);
+			setEditMode(true);
+			setIsDialogOpen(true);
+		}
+	};
+
+	const handleDeleteNote = async (id: string) => {
+		console.log(id);
+		try {
+			await deleteNote(id);
+			fetchNotes();
+		} catch (error) {
+			console.error('Failed to delete note:', error);
 		}
 	};
 
 	const handleLogout = () => {
-		// Placeholder for logout functionality
-		console.log('Logging out...');
-		// Implement actual logout logic here, e.g., clearing session, redirecting to login page, etc.
+		logout();
+		navigate('/');
 	};
 
 	return (
@@ -41,7 +90,14 @@ export default function MainPage() {
 				<div className='flex items-center space-x-4'>
 					<Dialog
 						open={isDialogOpen}
-						onOpenChange={setIsDialogOpen}
+						onOpenChange={open => {
+							setIsDialogOpen(open);
+							if (!open) {
+								setNewNote({ title: '', content: '' });
+								setEditMode(false);
+								setNoteToEdit(null);
+							}
+						}}
 					>
 						<DialogTrigger asChild>
 							<Button variant='secondary'>
@@ -50,8 +106,8 @@ export default function MainPage() {
 						</DialogTrigger>
 						<DialogContent>
 							<DialogHeader>
-								<DialogTitle>Create a New Note</DialogTitle>
-								<DialogDescription>Add a title and content for your new note.</DialogDescription>
+								<DialogTitle>{editMode ? 'Edit Note' : 'Create a New Note'}</DialogTitle>
+								<DialogDescription>{editMode ? 'Update your note details' : 'Add a title and content for your new note.'}</DialogDescription>
 							</DialogHeader>
 							<div className='grid gap-4 py-4'>
 								<div className='grid grid-cols-4 items-center gap-4'>
@@ -84,7 +140,7 @@ export default function MainPage() {
 								</div>
 							</div>
 							<DialogFooter>
-								<Button onClick={handleCreateNote}>Create Note</Button>
+								<Button onClick={handleCreateNote}>{editMode ? 'Update Note' : 'Create Note'}</Button>
 							</DialogFooter>
 						</DialogContent>
 					</Dialog>
@@ -99,16 +155,27 @@ export default function MainPage() {
 			<main className='flex-1 p-6 bg-background'>
 				<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
 					{notes.map(note => (
-						<Card key={note.id}>
+						<Card key={note._id}>
 							<CardHeader>
 								<CardTitle>{note.title}</CardTitle>
-								<CardDescription>{note.date}</CardDescription>
+								<CardDescription>{note.createdDate.slice(0, 10)}</CardDescription>
 							</CardHeader>
 							<CardContent>
 								<p>{note.content}</p>
 							</CardContent>
-							<CardFooter>
-								<Button variant='outline'>Edit</Button>
+							<CardFooter className='flex justify-between'>
+								<Button
+									variant='outline'
+									onClick={() => handleEditNote(note._id)}
+								>
+									Edit
+								</Button>
+								<Button
+									variant='destructive'
+									onClick={() => handleDeleteNote(note._id)}
+								>
+									Delete
+								</Button>
 							</CardFooter>
 						</Card>
 					))}
