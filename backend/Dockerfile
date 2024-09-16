@@ -1,23 +1,23 @@
-# Use the official Node.js 16 image as a parent image
-FROM node:16-alpine
+# Базовый образ Node.js
+FROM node:18-alpine
 
-# Set the working directory
-WORKDIR /usr/src/app
+# Установка рабочего каталога
+WORKDIR /app
 
-# Copy package.json and package-lock.json
+# Копирование package.json и package-lock.json
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Установка зависимостей
+RUN npm install --production
 
-# Copy the rest of your app's source code
+# Копирование всех файлов проекта
 COPY . .
 
-# Build your app
+# Компиляция TypeScript в JavaScript
 RUN npm run build
 
-# Expose the port your app runs on
+# Открытие порта, на котором работает приложение
 EXPOSE 3000
 
-# Run your app
-CMD ["node", "dist/main"]
+# Команда для запуска приложения
+CMD ["npm", "run", "start:prod"]
