@@ -3,16 +3,30 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { login, register } from '@/services/authService';
+import { useNavigate } from 'react-router-dom';
 
 export default function LoginPage() {
 	const [isSignUp, setIsSignUp] = useState(false);
-	const [email, setEmail] = useState('');
+	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
+	const [error, setError] = useState<string | null>(null);
+	const navigate = useNavigate();
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		// Here you would typically handle the authentication logic
-		console.log(isSignUp ? 'Sign Up' : 'Sign In', { email, password });
+		setError(null);
+		try {
+			if (isSignUp) {
+				await register(username, password);
+			} else {
+				await login(username, password);
+			}
+			navigate('/main');
+		} catch (err) {
+			setError('Authentication failed. Please check your credentials.');
+			console.error('Authentication error:', err);
+		}
 	};
 
 	const toggleMode = () => setIsSignUp(!isSignUp);
@@ -25,6 +39,7 @@ export default function LoginPage() {
 					<CardDescription>{isSignUp ? 'Create an account to start taking notes' : 'Sign in to access your notes'}</CardDescription>
 				</CardHeader>
 				<CardContent>
+					{error && <p className='text-red-500 text-sm mb-4'>{error}</p>}
 					<form
 						onSubmit={handleSubmit}
 						className='space-y-4'
@@ -32,12 +47,12 @@ export default function LoginPage() {
 						<div className='space-y-2'>
 							<Label htmlFor='email'>Email</Label>
 							<Input
-								id='email'
-								type='email'
-								placeholder='you@example.com'
+								id='username'
+								type='text'
+								placeholder='User Name'
 								required
-								value={email}
-								onChange={e => setEmail(e.target.value)}
+								value={username}
+								onChange={e => setUsername(e.target.value)}
 							/>
 						</div>
 						<div className='space-y-2'>
