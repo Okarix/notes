@@ -27,10 +27,8 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    const payload = { username: newUser.username, sub: newUser._id };
-    const token = this.jwtService.sign(payload);
-
-    return { token };
+    const { password, ...result } = newUser.toJSON();
+    return result;
   }
 
   async validateUser(username: string, password: string): Promise<any> {

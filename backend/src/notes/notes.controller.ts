@@ -13,14 +13,16 @@ import {
 import { NotesService } from './notes.service';
 import { CreateNoteDto, UpdateNoteDto } from './dto/note.dto';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 
 @Controller('notes')
 @ApiTags('notes')
 @UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class NotesController {
   constructor(private readonly notesService: NotesService) {}
 
+  @ApiBody({ type: CreateNoteDto })
   @Post()
   create(@Body(ValidationPipe) createNoteDto: CreateNoteDto, @Request() req) {
     return this.notesService.create(createNoteDto, req.user.userId);
@@ -36,6 +38,7 @@ export class NotesController {
     return this.notesService.findOne(id, req.user.userId);
   }
 
+  @ApiBody({ type: UpdateNoteDto })
   @Patch(':id')
   update(
     @Param('id') id: string,
