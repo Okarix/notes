@@ -17,9 +17,9 @@ export const AuthForm: React.FC<AuthFormProps> = ({ isSignUp, onSubmit, username
 	>
 		<FormField
 			id='username'
-			label='Email'
+			label='Username'
 			type='text'
-			placeholder='User Name'
+			placeholder='Username'
 			required
 			value={username}
 			onChange={e => setUsername(e.target.value)}
