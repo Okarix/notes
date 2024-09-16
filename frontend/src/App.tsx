@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import MainPage from './pages/MainPage';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
 	return (
@@ -12,7 +13,11 @@ function App() {
 				/>
 				<Route
 					path='/main'
-					element={<MainPage />}
+					element={
+						<ProtectedRoute>
+							<MainPage />
+						</ProtectedRoute>
+					}
 				/>
 			</Routes>
 		</Router>
